@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Send Shopping Receipt</title>
+  <style>
+    body {
+      background: #f7f9fb;
+      font-family: 'Arial', sans-serif;
+      margin: 0;
+      padding: 40px;
+      color: #333;
+    }
+    .container {
+      max-width: 500px;
+      margin: auto;
+      background: #fff;
+      padding: 30px 40px;
+      border-radius: 12px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 30px;
+      color: #4a90e2;
+    }
+    label {
+      display: block;
+      margin: 15px 0 5px;
+      font-weight: 600;
+    }
+    input[type="text"],
+    input[type="email"],
+    input[type="date"] {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+    .products label {
+      font-weight: normal;
+      display: block;
+      margin: 5px 0;
+    }
+    .total {
+      margin-top: 15px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+    button {
+      background: #4a90e2;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      font-size: 16px;
+      border-radius: 6px;
+      width: 100%;
+      margin-top: 20px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background: #3b78c6;
+    }
+    #discounted-price {
+      font-size: 18px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Send Shopping Receipt</h2>
+    <form id="form">
+      <label>Name</label>
+      <input type="text" name="name" required />
+
+      <label>Email</label>
+      <input type="email" name="email" required />
+
+      <label>Birthday</label>
+      <input type="date" name="birthday" required />
+
+      <div class="products">
+        <label><input type="checkbox" name="products" value="Apple (€0.99)" data-price="0.99" /> Apple (€0.99)</label>
+        <label><input type="checkbox" name="products" value="Milk (€1.49)" data-price="1.49" /> Milk (€1.49)</label>
+        <label><input type="checkbox" name="products" value="Bread (€2.19)" data-price="2.49" /> Bread (€2.19)</label>
+        <label><input type="checkbox" name="products" value="Eggs (€2.89)" data-price="2.89" /> Eggs (€2.89)</label>
+        <label><input type="checkbox" name="products" value="Juice (€2.49)" data-price="2.49" /> Juice (€2.49)</label>
+        <label><input type="checkbox" name="products" value="Cheese (€3.49)" data-price="3.79" /> Cheese (€3.49)</label>
+        <label><input type="checkbox" name="products" value="Chicken (€5.99)" data-price="5.99" /> Chicken (€5.99)</label>
+      </div>
+
+      <p class="total">Total: €<span id="total">0.00</span></p>
+
+      <label>Discount Code</label>
+      <input type="text" id="discountCode" placeholder="e.g. DENIZSTORE-10%" />
+
+      <button type="button" id="apply-discount">Apply Discount</button>
+      <p id="discounted-price"></p>
+
+      <button type="submit">Send Receipt</button>
+    </form>
+  </div>
+
+  <script>
+    const form = document.getElementById('form');
+    const checkboxes = form.querySelectorAll('input[type="checkbox"]');
+    const totalDisplay = document.getElementById('total');
+    const discountCodeInput = document.getElementById('discountCode');
+    const discountedDisplay = document.getElementById('discounted-price');
+
+    let total = 0;
+
+    function calculateTotal() {
+      total = 0;
+      checkboxes.forEach(cb => {
+        if (cb.checked) {
+          total += parseFloat(cb.dataset.price);
+        }
+      });
+      totalDisplay.textContent = total.toFixed(2);
+      discountedDisplay.textContent = '';
+    }
+
+    checkboxes.forEach(cb => cb.addEventListener('change', calculateTotal));
+
+    document.getElementById('apply-discount').addEventListener('click', () => {
+      const code = discountCodeInput.value.trim();
+      let discount = 0;
+
+      if (code === "DENIZSTORE-10%" && total > 10) {
+        discount = 0.10;
+      } else if (code === "DENIZSTORE-20%" && total > 20) {
+        discount = 0.20;
+      }
+
+      if (discount > 0) {
+        const newTotal = total * (1 - discount);
+        discountedDisplay.style.color = 'green';
+        discountedDisplay.textContent = `Discounted Price: €${newTotal.toFixed(2)}`;
+      } else {
+        discountedDisplay.style.color = 'red';
+        discountedDisplay.textContent = 'Invalid or ineligible discount code.';
+      }
+    });
+
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+
+      const selected = Array.from(checkboxes)
+        .filter(cb => cb.checked)
+        .map(cb => cb.value);
+
+      const payload = {
+        name: form.name.value,
+        email: form.email.value,
+        birthday: form.birthday.value,
+        products: selected,
+        total: total.toFixed(2),
+        discount_code: discountCodeInput.value.trim()
+      };
+
+      try {
+        const res = await fetch('https://kks00kf193.execute-api.eu-central-1.amazonaws.com/prod/send-receipt', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const result = await res.json();
+        alert(result.message);
+      } catch (err) {
+        alert('Error sending receipt: ' + err.message);
+      }
+    });
+
+    calculateTotal();
+  </script>
+</body>
+</html>
