@@ -25,7 +25,6 @@ This project was built as part of the Cloud Programming course at IU, showcasing
 |--------------|-------------|
 | `form.html`  | The public shopping receipt form (hosted on S3) |
 | `lambda.py`  | Python script executed by AWS Lambda to process form data |
-| `lambda.zip` | Zipped deployment package containing `lambda.py` |
 | `main.tf`    | Terraform configuration to automate AWS resource provisioning |
 
 ---
