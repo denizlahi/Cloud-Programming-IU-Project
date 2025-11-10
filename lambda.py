@@ -61,7 +61,7 @@ def lambda_handler(event, context):
 
     # Send Email
     ses.send_email(
-        Source='denizlahi1016@gmail.com',
+        Source='your_verified_email@domain.com',
         Destination={'ToAddresses': [email]},
         Message={
             'Subject': {'Data': f"Your Receipt from Deniz Store"},
